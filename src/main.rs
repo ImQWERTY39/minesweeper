@@ -1,5 +1,7 @@
 use minesweeper::{Difficulty, Grid};
 
 fn main() {
-    let _board = Grid::new(Difficulty::Easy);
+    let board = Grid::new(Difficulty::Medium);
+
+    println!("{board:?}");
 }
