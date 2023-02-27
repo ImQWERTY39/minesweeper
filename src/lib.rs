@@ -1,4 +1,5 @@
 use rand::Rng;
+use std::fmt;
 
 fn rand_coord(range: &usize) -> (usize, usize) {
     let mut random = rand::thread_rng();
@@ -7,6 +8,17 @@ fn rand_coord(range: &usize) -> (usize, usize) {
         random.gen_range(0..range.to_owned()),
         random.gen_range(0..range.to_owned()),
     )
+}
+
+pub enum Status {
+    Success,
+    CannotOpenFlaggedCell,
+    CannotOpenOpenedCell,
+    CannotFlagOpenedCell,
+    PositionOutOfBounds,
+    GameWon,
+    GameOver,
+    FlagLimitReached,
 }
 
 #[derive(Clone, PartialEq)]
@@ -52,7 +64,43 @@ enum Cell {
     Mined(Mined),
 }
 
-impl Cell {}
+impl Cell {
+    fn open(&mut self) -> (Status, bool) {
+        match self {
+            Cell::NonMined(i) => {
+                if i.is_flagged {
+                    return (Status::CannotOpenFlaggedCell, false);
+                } else if i.is_open {
+                    return (Status::CannotOpenOpenedCell, false);
+                } else {
+                    i.is_open = true;
+
+                    return (Status::Success, i.mine_count == 0);
+                }
+            }
+
+            Cell::Mined(_) => (Status::GameOver, false),
+        }
+    }
+
+    fn flag(&mut self) -> Status {
+        match self {
+            Cell::NonMined(i) => {
+                if i.is_open {
+                    return Status::CannotFlagOpenedCell;
+                }
+
+                i.is_flagged = !i.is_flagged;
+                return Status::Success;
+            }
+
+            Cell::Mined(i) => {
+                i.is_flagged = !i.is_flagged;
+                return Status::Success;
+            }
+        }
+    }
+}
 
 #[derive(Clone, PartialEq)]
 pub struct Grid {
@@ -193,9 +241,43 @@ impl Grid {
         .init()
         .to_owned()
     }
+
+    pub fn open(&mut self, row: usize, col: usize) -> Status {
+        let board_size_max = self.difficulty.get_board_size() - 1;
+
+        if row > board_size_max || col > board_size_max {
+            return Status::PositionOutOfBounds;
+        }
+
+        let status = self.board[row][col].open();
+
+        if status.1 {
+            let neighbor_cells_vec =
+                self.get_neighbor_cells_coords(row, col, self.difficulty.get_board_size() - 1);
+
+            for (r, c) in neighbor_cells_vec {
+                self.open(r, c);
+            }
+        }
+
+        status.0
+    }
+
+    pub fn flag(&mut self, row: usize, col: usize) -> Status {
+        if self.flags_left == 0 {
+            return Status::FlagLimitReached;
+        }
+
+        let board_size_max = self.difficulty.get_board_size() - 1;
+        if row > board_size_max || col > board_size_max {
+            return Status::PositionOutOfBounds;
+        }
+
+        self.board[row][col].flag()
+    }
 }
 
-impl std::fmt::Debug for Grid {
+impl fmt::Debug for Grid {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut board_str = String::new();
         let board_size = self.difficulty.get_board_size();
@@ -219,6 +301,64 @@ impl std::fmt::Debug for Grid {
             }
 
             board_str += "|\n";
+
+            for _ in 0..board_size {
+                board_str += "|---"
+            }
+
+            board_str += "|\n";
+        }
+
+        write!(f, "{board_str}")
+    }
+}
+
+impl fmt::Display for Grid {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut board_str = String::from("    ");
+        let board_size = self.difficulty.get_board_size();
+
+        for i in 0..board_size {
+            board_str += format!("{i}   ").as_str();
+        }
+
+        board_str += "\n  ";
+
+        for _ in 0..board_size {
+            board_str += "|---"
+        }
+
+        board_str += "|\n";
+
+        for i in 0..board_size {
+            board_str += format!("{} ", i).as_str();
+
+            for j in 0..board_size {
+                let temp: String;
+
+                match &self.board[i][j] {
+                    Cell::NonMined(i) => {
+                        if i.is_open {
+                            temp = format!("| {} ", i.mine_count)
+                        } else if i.is_flagged {
+                            temp = "| F ".to_string()
+                        } else {
+                            temp = "| • ".to_string()
+                        }
+                    }
+                    Cell::Mined(i) => {
+                        if i.is_flagged {
+                            temp = "| F ".to_string()
+                        } else {
+                            temp = "| • ".to_string()
+                        }
+                    }
+                }
+
+                board_str += temp.as_str();
+            }
+
+            board_str += "|\n  ";
 
             for _ in 0..board_size {
                 board_str += "|---"
