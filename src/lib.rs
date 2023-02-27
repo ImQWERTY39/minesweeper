@@ -226,6 +226,49 @@ impl Grid {
 
         neighbor_cells_coords
     }
+
+    fn has_won_helper(&self) -> bool {
+        if self.flags_left != 0 {
+            return false;
+        }
+
+        let board_size = self.difficulty.get_board_size();
+        for i in 0..board_size {
+            for j in 0..board_size {
+                match &self.board[i][j] {
+                    Cell::NonMined(i) => {
+                        if i.is_flagged == true {
+                            return false;
+                        }
+                    }
+                    Cell::Mined(i) => {}
+                }
+            }
+        }
+
+        true
+    }
+
+    pub fn test(&mut self) -> Self {
+        let mut something = Self {
+            board: vec![vec![Cell::NonMined(NonMined::default()); 10]; 10],
+            difficulty: Difficulty::Easy,
+            flags_left: 10,
+        };
+
+        something.board[0][0] = Cell::Mined(Mined { is_flagged: false });
+        something.board[0][1] = Cell::Mined(Mined { is_flagged: false });
+        something.board[0][2] = Cell::Mined(Mined { is_flagged: false });
+        something.board[0][3] = Cell::Mined(Mined { is_flagged: false });
+        something.board[0][4] = Cell::Mined(Mined { is_flagged: false });
+        something.board[0][5] = Cell::Mined(Mined { is_flagged: false });
+        something.board[0][6] = Cell::Mined(Mined { is_flagged: false });
+        something.board[0][7] = Cell::Mined(Mined { is_flagged: false });
+        something.board[0][8] = Cell::Mined(Mined { is_flagged: false });
+        something.board[0][9] = Cell::Mined(Mined { is_flagged: false });
+
+        something
+    }
 }
 
 impl Grid {
@@ -275,6 +318,10 @@ impl Grid {
 
         self.board[row][col].flag()
     }
+
+    pub fn has_won(&self) -> bool {
+        self.has_won_helper()
+    }
 }
 
 impl fmt::Debug for Grid {
@@ -294,7 +341,13 @@ impl fmt::Debug for Grid {
 
                 match &self.board[i][j] {
                     Cell::NonMined(i) => temp = format!("| {} ", i.mine_count),
-                    Cell::Mined(_) => temp = String::from("| M "),
+                    Cell::Mined(i) => {
+                        if i.is_flagged {
+                            temp = String::from("| F ")
+                        } else {
+                            temp = String::from("| M ")
+                        }
+                    }
                 }
 
                 board_str += temp.as_str();

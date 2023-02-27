@@ -2,7 +2,7 @@ use minesweeper::{Difficulty, Grid, Status};
 use std::io::{stdout, Write};
 
 fn main() {
-    let mut board = Grid::new(Difficulty::Easy);
+    let mut board = Grid::new(Difficulty::Easy).test();
     game_loop(&mut board);
 }
 
@@ -39,7 +39,11 @@ fn game_loop(board: &mut Grid) {
         }
     }
 
-    println!("{board}\n\nGame over LMAOOOOOOOOOOOOO");
+    if board.has_won() {
+        println!("{board:?}\n\nCongratulations, you won :D");
+    } else {
+        println!("{board:?}\n\nGame over LMAO");
+    }
 }
 
 fn get_coords() -> (usize, usize) {
