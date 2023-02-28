@@ -241,7 +241,7 @@ impl Grid {
                             return false;
                         }
                     }
-                    Cell::Mined(i) => {}
+                    Cell::Mined(_i) => {}
                 }
             }
         }
