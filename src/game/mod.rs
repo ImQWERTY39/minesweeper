@@ -1,16 +1,28 @@
-use crate::{Grid, Status};
-use std::io::{stdout, Write};
+use crate::{Difficulty, Grid, Status};
+use std::io::{self, Write};
 
-pub fn game_loop(board: &mut Grid) {
+pub fn run() {
+    let mut board = Grid::new(match get_difficulty() {
+        1 => Difficulty::Easy,
+        2 => Difficulty::Medium,
+        3 => Difficulty::Hard,
+        _ => unreachable!(),
+    });
+
+    println!("\n\n");
+    game_loop(&mut board);
+}
+
+fn game_loop(board: &mut Grid) {
     loop {
         println!("{board}");
 
         print!("\nEnter coords[row col]: ");
-        stdout().flush().unwrap();
+        io::stdout().flush().unwrap();
         let (row, col) = get_coords();
 
         print!("Enter action: ");
-        stdout().flush().unwrap();
+        io::stdout().flush().unwrap();
         let action = get_action();
 
         if action == 'o' {
@@ -43,11 +55,32 @@ pub fn game_loop(board: &mut Grid) {
     }
 }
 
-pub fn get_input() -> String {
+fn get_input() -> String {
     let mut input = String::new();
     std::io::stdin().read_line(&mut input).unwrap();
 
     input
+}
+
+fn get_difficulty() -> u8 {
+    print!(
+        r#"Enter difficulty:
+1. Easy (Default)
+2. Medium
+3. Hard
+
+> "#
+    );
+
+    io::stdout().flush().unwrap();
+
+    let mut number = get_input().trim().parse::<u8>().unwrap_or(1);
+
+    if number > 3 {
+        number = 3;
+    }
+
+    number
 }
 
 fn get_coords() -> (usize, usize) {
