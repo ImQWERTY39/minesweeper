@@ -2,7 +2,24 @@ use minesweeper::{Difficulty, Grid, Status};
 use std::io::{stdout, Write};
 
 fn main() {
-    let mut board = Grid::new(Difficulty::Easy).test();
+    print!(
+        r#"Enter difficulty:
+1. Easy (Default)
+2. Medium
+3. Hard
+
+> "#
+    );
+
+    stdout().flush().unwrap();
+
+    let mut board = Grid::new(match get_input().trim().parse::<u8>().unwrap_or(1) {
+        2 => Difficulty::Medium,
+        3 => Difficulty::Hard,
+        _ => Difficulty::Easy,
+    });
+
+    println!("\n\n");
     game_loop(&mut board);
 }
 
@@ -21,50 +38,57 @@ fn game_loop(board: &mut Grid) {
         if action == 'o' {
             match board.open(row, col) {
                 Status::Success => {}
-                Status::CannotOpenFlaggedCell => println!("Cannot open a flagged cell\n\n"),
-                Status::CannotOpenOpenedCell => println!("Cell already opened\n\n"),
-                Status::PositionOutOfBounds => println!("Position out of bounds\n\n"),
-                Status::GameOver => break,
+                Status::CannotOpenFlaggedCell => println!("Cannot open a flagged cell"),
+                Status::CannotOpenOpenedCell => println!("Cell already opened"),
+                Status::PositionOutOfBounds => println!("Position out of bounds"),
+                Status::GameOver | Status::GameWon => break,
                 _ => unreachable!(),
             }
         } else {
             match board.flag(row, col) {
                 Status::Success => {}
-                Status::CannotFlagOpenedCell => println!("Cell already opened \n\n"),
-                Status::PositionOutOfBounds => println!("Position out of bounds\n\n"),
-                Status::FlagLimitReached => println!("Flag limit reached\n\n"),
+                Status::CannotFlagOpenedCell => println!("Cell already opened "),
+                Status::PositionOutOfBounds => println!("Position out of bounds"),
+                Status::FlagLimitReached => println!("Flag limit reached"),
                 Status::GameWon => break,
                 _ => unreachable!(),
             }
         }
+
+        println!("\n");
     }
 
     if board.has_won() {
-        println!("{board:?}\n\nCongratulations, you won :D");
+        println!("\n\n{board:?}\nCongratulations, you won :D");
     } else {
-        println!("{board:?}\n\nGame over LMAO");
+        println!("\n\n{board:?}\nGame over LMAO");
     }
 }
 
-fn get_coords() -> (usize, usize) {
+fn get_input() -> String {
     let mut input = String::new();
     std::io::stdin().read_line(&mut input).unwrap();
 
-    let input_coord = input
+    input
+}
+
+fn get_coords() -> (usize, usize) {
+    let input_coord = get_input()
         .trim()
-        .split(" ")
+        .split(' ')
         .map(|x| x.parse::<usize>().unwrap_or_default())
         .collect::<Vec<usize>>();
 
-    let row = input_coord.get(0).unwrap_or(&0).to_owned();
+    let row = input_coord.first().unwrap_or(&0).to_owned();
     let col = input_coord.get(1).unwrap_or(&0).to_owned();
 
     (row, col)
 }
 
 fn get_action() -> char {
-    let mut input = String::new();
-    std::io::stdin().read_line(&mut input).unwrap();
-
-    input.to_ascii_lowercase().chars().next().unwrap_or('F')
+    get_input()
+        .to_ascii_lowercase()
+        .chars()
+        .next()
+        .unwrap_or('F')
 }

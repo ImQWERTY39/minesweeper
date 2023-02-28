@@ -10,6 +10,10 @@ fn rand_coord(range: &usize) -> (usize, usize) {
     )
 }
 
+fn in_range(num1: isize, num2: isize, upper_limit: isize) -> bool {
+    num1 >= 0 && num1 <= upper_limit && num2 >= 0 && num2 <= upper_limit
+}
+
 pub enum Status {
     Success,
     CannotOpenFlaggedCell,
@@ -69,13 +73,12 @@ impl Cell {
         match self {
             Cell::NonMined(i) => {
                 if i.is_flagged {
-                    return (Status::CannotOpenFlaggedCell, false);
+                    (Status::CannotOpenFlaggedCell, false)
                 } else if i.is_open {
-                    return (Status::CannotOpenOpenedCell, false);
+                    (Status::CannotOpenOpenedCell, false)
                 } else {
                     i.is_open = true;
-
-                    return (Status::Success, i.mine_count == 0);
+                    (Status::Success, i.mine_count == 0)
                 }
             }
 
@@ -83,20 +86,30 @@ impl Cell {
         }
     }
 
-    fn flag(&mut self) -> Status {
+    fn flag(&mut self) -> (Status, bool) {
         match self {
             Cell::NonMined(i) => {
                 if i.is_open {
-                    return Status::CannotFlagOpenedCell;
+                    return (Status::CannotFlagOpenedCell, false);
                 }
 
-                i.is_flagged = !i.is_flagged;
-                return Status::Success;
+                if i.is_flagged {
+                    i.is_flagged = false;
+                    return (Status::Success, false);
+                } else {
+                    i.is_flagged = true;
+                    return (Status::Success, true);
+                }
             }
 
             Cell::Mined(i) => {
-                i.is_flagged = !i.is_flagged;
-                return Status::Success;
+                if i.is_flagged {
+                    i.is_flagged = false;
+                    return (Status::Success, false);
+                } else {
+                    i.is_flagged = true;
+                    return (Status::Success, true);
+                }
             }
         }
     }
@@ -165,62 +178,35 @@ impl Grid {
     ) -> Vec<(usize, usize)> {
         let mut neighbor_cells_coords = Vec::<(usize, usize)>::new();
 
-        if i == 0 && j == 0 {
-            // top left corner
-            neighbor_cells_coords.push((i, j + 1));
-            neighbor_cells_coords.push((i + 1, j));
-            neighbor_cells_coords.push((i + 1, j + 1));
-        } else if i == board_size && j == 0 {
-            // bottom left corner
-            neighbor_cells_coords.push((i, j + 1));
-            neighbor_cells_coords.push((i - 1, j));
-            neighbor_cells_coords.push((i - 1, j + 1));
-        } else if i == 0 && j == board_size {
-            // top right corner
-            neighbor_cells_coords.push((i, j - 1));
-            neighbor_cells_coords.push((i + 1, j));
-            neighbor_cells_coords.push((i + 1, j - 1));
-        } else if i == board_size && j == board_size {
-            // bottom right corner
-            neighbor_cells_coords.push((i, j - 1));
-            neighbor_cells_coords.push((i - 1, j));
+        if in_range((i as isize) - 1, (j as isize) - 1, board_size as isize) {
             neighbor_cells_coords.push((i - 1, j - 1));
-        } else if i == 0 {
-            // top row
-            neighbor_cells_coords.push((i, j + 1));
-            neighbor_cells_coords.push((i, j - 1));
-            neighbor_cells_coords.push((i + 1, j - 1));
-            neighbor_cells_coords.push((i + 1, j));
-            neighbor_cells_coords.push((i + 1, j + 1));
-        } else if i == board_size {
-            // bottom row
-            neighbor_cells_coords.push((i, j + 1));
-            neighbor_cells_coords.push((i, j - 1));
-            neighbor_cells_coords.push((i - 1, j - 1));
+        }
+
+        if in_range((i as isize) - 1, j as isize, board_size as isize) {
             neighbor_cells_coords.push((i - 1, j));
+        }
+
+        if in_range((i as isize) - 1, (j as isize) + 1, board_size as isize) {
             neighbor_cells_coords.push((i - 1, j + 1));
-        } else if j == 0 {
-            // left column
-            neighbor_cells_coords.push((i - 1, j));
-            neighbor_cells_coords.push((i - 1, j + 1));
-            neighbor_cells_coords.push((i, j + 1));
-            neighbor_cells_coords.push((i + 1, j));
-            neighbor_cells_coords.push((i + 1, j + 1));
-        } else if j == board_size {
-            // right column
-            neighbor_cells_coords.push((i - 1, j));
-            neighbor_cells_coords.push((i - 1, j - 1));
+        }
+
+        if in_range(i as isize, (j as isize) - 1, board_size as isize) {
             neighbor_cells_coords.push((i, j - 1));
-            neighbor_cells_coords.push((i + 1, j));
-            neighbor_cells_coords.push((i + 1, j - 1));
-        } else {
-            neighbor_cells_coords.push((i - 1, j - 1));
-            neighbor_cells_coords.push((i - 1, j));
-            neighbor_cells_coords.push((i - 1, j + 1));
-            neighbor_cells_coords.push((i, j - 1));
+        }
+
+        if in_range(i as isize, (j as isize) + 1, board_size as isize) {
             neighbor_cells_coords.push((i, j + 1));
+        }
+
+        if in_range((i as isize) + 1, (j as isize) - 1, board_size as isize) {
             neighbor_cells_coords.push((i + 1, j - 1));
+        }
+
+        if in_range((i as isize) + 1, j as isize, board_size as isize) {
             neighbor_cells_coords.push((i + 1, j));
+        }
+
+        if in_range((i as isize) + 1, (j as isize) + 1, board_size as isize) {
             neighbor_cells_coords.push((i + 1, j + 1));
         }
 
@@ -228,46 +214,23 @@ impl Grid {
     }
 
     fn has_won_helper(&self) -> bool {
-        if self.flags_left != 0 {
-            return false;
-        }
-
-        let board_size = self.difficulty.get_board_size();
-        for i in 0..board_size {
-            for j in 0..board_size {
-                match &self.board[i][j] {
-                    Cell::NonMined(i) => {
-                        if i.is_flagged == true {
-                            return false;
-                        }
+        for i in 0..self.difficulty.get_board_size() {
+            for j in 0..self.difficulty.get_board_size() {
+                if let Cell::NonMined(k) = &self.board[i][j] {
+                    if k.is_flagged {
+                        return false;
                     }
-                    Cell::Mined(_i) => {}
+                }
+
+                if let Cell::Mined(k) = &self.board[i][j] {
+                    if !k.is_flagged {
+                        return false;
+                    }
                 }
             }
         }
 
         true
-    }
-
-    pub fn test(&mut self) -> Self {
-        let mut something = Self {
-            board: vec![vec![Cell::NonMined(NonMined::default()); 10]; 10],
-            difficulty: Difficulty::Easy,
-            flags_left: 10,
-        };
-
-        something.board[0][0] = Cell::Mined(Mined { is_flagged: false });
-        something.board[0][1] = Cell::Mined(Mined { is_flagged: false });
-        something.board[0][2] = Cell::Mined(Mined { is_flagged: false });
-        something.board[0][3] = Cell::Mined(Mined { is_flagged: false });
-        something.board[0][4] = Cell::Mined(Mined { is_flagged: false });
-        something.board[0][5] = Cell::Mined(Mined { is_flagged: false });
-        something.board[0][6] = Cell::Mined(Mined { is_flagged: false });
-        something.board[0][7] = Cell::Mined(Mined { is_flagged: false });
-        something.board[0][8] = Cell::Mined(Mined { is_flagged: false });
-        something.board[0][9] = Cell::Mined(Mined { is_flagged: false });
-
-        something
     }
 }
 
@@ -303,6 +266,10 @@ impl Grid {
             }
         }
 
+        if self.has_won_helper() {
+            return Status::GameWon;
+        }
+
         status.0
     }
 
@@ -316,7 +283,19 @@ impl Grid {
             return Status::PositionOutOfBounds;
         }
 
-        self.board[row][col].flag()
+        let status = self.board[row][col].flag();
+
+        if status.1 {
+            self.flags_left -= 1;
+        } else {
+            self.flags_left += 1;
+        }
+
+        if self.has_won_helper() {
+            return Status::GameWon;
+        }
+
+        status.0
     }
 
     pub fn has_won(&self) -> bool {
@@ -340,12 +319,18 @@ impl fmt::Debug for Grid {
                 let temp: String;
 
                 match &self.board[i][j] {
-                    Cell::NonMined(i) => temp = format!("| {} ", i.mine_count),
+                    Cell::NonMined(i) => {
+                        if i.mine_count == 0 {
+                            temp = "|   ".to_string();
+                        } else {
+                            temp = format!("| {} ", i.mine_count)
+                        }
+                    }
                     Cell::Mined(i) => {
                         if i.is_flagged {
-                            temp = String::from("| F ")
+                            temp = "| F ".to_string();
                         } else {
-                            temp = String::from("| M ")
+                            temp = "| M ".to_string();
                         }
                     }
                 }
@@ -384,7 +369,7 @@ impl fmt::Display for Grid {
         board_str += "|\n";
 
         for i in 0..board_size {
-            board_str += format!("{} ", i).as_str();
+            board_str += format!("{i} ").as_str();
 
             for j in 0..board_size {
                 let temp: String;
@@ -392,7 +377,11 @@ impl fmt::Display for Grid {
                 match &self.board[i][j] {
                     Cell::NonMined(i) => {
                         if i.is_open {
-                            temp = format!("| {} ", i.mine_count)
+                            if i.mine_count == 0 {
+                                temp = "|   ".to_string();
+                            } else {
+                                temp = format!("| {} ", i.mine_count)
+                            }
                         } else if i.is_flagged {
                             temp = "| F ".to_string()
                         } else {
@@ -420,6 +409,6 @@ impl fmt::Display for Grid {
             board_str += "|\n";
         }
 
-        write!(f, "{board_str}")
+        write!(f, "{board_str}Remaining flags: {}", self.flags_left)
     }
 }
