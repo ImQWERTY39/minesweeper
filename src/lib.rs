@@ -309,7 +309,7 @@ impl fmt::Debug for Grid {
         let board_size = self.difficulty.get_board_size();
 
         for _ in 0..board_size {
-            board_str += "|---"
+            board_str += "|----"
         }
 
         board_str += "|\n";
@@ -321,16 +321,16 @@ impl fmt::Debug for Grid {
                 match &self.board[i][j] {
                     Cell::NonMined(i) => {
                         if i.mine_count == 0 {
-                            temp = "|   ".to_string();
+                            temp = "|    ".to_string();
                         } else {
-                            temp = format!("| {} ", i.mine_count)
+                            temp = format!("|  {} ", i.mine_count)
                         }
                     }
                     Cell::Mined(i) => {
                         if i.is_flagged {
-                            temp = "| F ".to_string();
+                            temp = "|  F ".to_string();
                         } else {
-                            temp = "| M ".to_string();
+                            temp = "|  M ".to_string();
                         }
                     }
                 }
@@ -341,7 +341,7 @@ impl fmt::Debug for Grid {
             board_str += "|\n";
 
             for _ in 0..board_size {
-                board_str += "|---"
+                board_str += "|----"
             }
 
             board_str += "|\n";
@@ -353,23 +353,23 @@ impl fmt::Debug for Grid {
 
 impl fmt::Display for Grid {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut board_str = String::from("    ");
+        let mut board_str = String::from("     ");
         let board_size = self.difficulty.get_board_size();
 
         for i in 0..board_size {
-            board_str += format!("{i}   ").as_str();
+            board_str += format!("{:02}   ", i + 1).as_str();
         }
 
-        board_str += "\n  ";
+        board_str += "\n   ";
 
         for _ in 0..board_size {
-            board_str += "|---"
+            board_str += "|----"
         }
 
         board_str += "|\n";
 
         for i in 0..board_size {
-            board_str += format!("{i} ").as_str();
+            board_str += format!("{:02} ", i + 1).as_str();
 
             for j in 0..board_size {
                 let temp: String;
@@ -378,21 +378,21 @@ impl fmt::Display for Grid {
                     Cell::NonMined(i) => {
                         if i.is_open {
                             if i.mine_count == 0 {
-                                temp = "|   ".to_string();
+                                temp = "|    ".to_string();
                             } else {
-                                temp = format!("| {} ", i.mine_count)
+                                temp = format!("|  {} ", i.mine_count)
                             }
                         } else if i.is_flagged {
-                            temp = "| F ".to_string()
+                            temp = "|  F ".to_string()
                         } else {
-                            temp = "| • ".to_string()
+                            temp = "|  • ".to_string()
                         }
                     }
                     Cell::Mined(i) => {
                         if i.is_flagged {
-                            temp = "| F ".to_string()
+                            temp = "|  F ".to_string()
                         } else {
-                            temp = "| • ".to_string()
+                            temp = "|  • ".to_string()
                         }
                     }
                 }
@@ -400,15 +400,15 @@ impl fmt::Display for Grid {
                 board_str += temp.as_str();
             }
 
-            board_str += "|\n  ";
+            board_str += "|\n   ";
 
             for _ in 0..board_size {
-                board_str += "|---"
+                board_str += "|----"
             }
 
             board_str += "|\n";
         }
 
-        write!(f, "{board_str}Remaining flags: {}", self.flags_left)
+        write!(f, "{board_str}\nRemaining flags: {}", self.flags_left)
     }
 }

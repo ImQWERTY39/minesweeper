@@ -79,8 +79,8 @@ fn get_coords() -> (usize, usize) {
         .map(|x| x.parse::<usize>().unwrap_or_default())
         .collect::<Vec<usize>>();
 
-    let row = input_coord.first().unwrap_or(&0).to_owned();
-    let col = input_coord.get(1).unwrap_or(&0).to_owned();
+    let row = input_coord.first().unwrap_or(&0) - 1;
+    let col = input_coord.get(1).unwrap_or(&0) - 1;
 
     (row, col)
 }
