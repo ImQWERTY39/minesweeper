@@ -1,4 +1,4 @@
-use crate::library::enums::Status;
+use crate::Status;
 
 #[derive(Default, Clone, PartialEq)]
 pub(super) struct NonMined {
@@ -45,20 +45,20 @@ impl Cell {
 
                 if i.is_flagged {
                     i.is_flagged = false;
-                    return (Status::Success, false);
+                    (Status::Success, false)
                 } else {
                     i.is_flagged = true;
-                    return (Status::Success, true);
+                    (Status::Success, true)
                 }
             }
 
             Cell::Mined(i) => {
                 if i.is_flagged {
                     i.is_flagged = false;
-                    return (Status::Success, false);
+                    (Status::Success, false)
                 } else {
                     i.is_flagged = true;
-                    return (Status::Success, true);
+                    (Status::Success, true)
                 }
             }
         }
