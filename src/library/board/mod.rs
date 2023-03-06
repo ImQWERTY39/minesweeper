@@ -304,13 +304,18 @@ impl fmt::Display for Grid {
                 board_str += temp.as_str();
             }
 
-            board_str += "|\n   ";
+            board_str += format!("| {:02}\n   ", i + 1).as_str();
 
             for _ in 0..board_size {
                 board_str += "|----"
             }
 
             board_str += "|\n";
+        }
+
+        board_str += "     ";
+        for i in 0..board_size {
+            board_str += format!("{:02}   ", i + 1).as_str();
         }
 
         write!(f, "{board_str}\nRemaining flags: {}", self.flags_left)
