@@ -1,4 +1,4 @@
-use crate::Status;
+use crate::library::Status;
 
 #[derive(Default, Clone, PartialEq)]
 pub(super) struct NonMined {

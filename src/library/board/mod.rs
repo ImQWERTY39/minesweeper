@@ -1,7 +1,7 @@
 mod cell;
 use cell::{Cell, Mined, NonMined};
 
-use crate::{Difficulty, Status};
+use crate::library::{Difficulty, Status};
 
 use rand::Rng;
 use std::fmt;
