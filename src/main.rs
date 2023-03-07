@@ -1,3 +1,5 @@
+mod game;
+
 fn main() {
-    minesweeper::run()
+    game::run()
 }

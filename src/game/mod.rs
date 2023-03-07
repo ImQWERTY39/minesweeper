@@ -1,4 +1,4 @@
-use crate::{Difficulty, Grid, Status};
+use crate::library::{Difficulty, Grid, Status};
 use std::io::{self, Write};
 
 pub fn run() {
@@ -8,9 +8,32 @@ pub fn run() {
         3 => Difficulty::Hard,
         _ => unreachable!(),
     });
-
     println!("\n\n");
-    game_loop(&mut board);
+
+    loop {
+        game_loop(&mut board);
+
+        if board.has_won() {
+            println!("\n\n{board:?}\nCongratulations, you won :D");
+        } else {
+            println!("\n\n{board:?}\nGame over, you lost :<");
+        }
+
+        print!("\nPlay again? (y/N) ");
+        std::io::stdout().flush().unwrap();
+
+        if get_input()
+            .to_ascii_lowercase()
+            .chars()
+            .next()
+            .unwrap_or('n')
+            == 'y'
+        {
+            continue;
+        }
+
+        break;
+    }
 }
 
 fn game_loop(board: &mut Grid) {
@@ -46,12 +69,6 @@ fn game_loop(board: &mut Grid) {
         }
 
         println!("\n");
-    }
-
-    if board.has_won() {
-        println!("\n\n{board:?}\nCongratulations, you won :D");
-    } else {
-        println!("\n\n{board:?}\nGame over LMAO");
     }
 }
 
