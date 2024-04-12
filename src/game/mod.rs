@@ -29,6 +29,12 @@ pub fn run() {
             .unwrap_or('n')
             == 'y'
         {
+            board = Grid::new(match get_difficulty() {
+                1 => Difficulty::Easy,
+                2 => Difficulty::Medium,
+                3 => Difficulty::Hard,
+                _ => unreachable!(),
+            });
             continue;
         }
 
