@@ -1,4 +1,9 @@
-use crate::library::{Difficulty, Grid, Status};
+use crate::library::Grid;
+
+mod board;
+mod state;
+
+use state::{Difficulty, Status};
 use std::io::{self, Write};
 
 pub fn run() {
